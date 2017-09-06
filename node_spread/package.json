@@ -1,0 +1,15 @@
+{
+  "name": "node_sp",
+  "version": "1.0.0",
+  "description": "Ứng dụng nodejs với google Spreadsheets",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "ThuXeko",
+  "license": "MIT",
+  "dependencies": {
+    "google-auth-library": "^0.11.0",
+    "googleapis": "^21.3.0"
+  }
+}
