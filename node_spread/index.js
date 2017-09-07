@@ -13,7 +13,7 @@ var TOKEN_PATH = TOKEN_DIR + 'sheets.googleapis.com-nodejs-quickstart.json';
 
 var usr = "test";
 
-function test(callback) {
+function GetSecret(callback) {
   fs.readFile('client_secret.json', function processClientSecrets(err, content) {
     if (err) {
       console.log('Error loading client secret file: ' + err);
@@ -25,7 +25,7 @@ function test(callback) {
   });
 }
 
-function test2(kq, callback) {
+function GetOauth(kq, callback) {
   var clientSecret = kq.installed.client_secret;
   var clientId = kq.installed.client_id;
   var redirectUrl = kq.installed.redirect_uris[0];
@@ -43,8 +43,8 @@ function test2(kq, callback) {
 }
 
 async.waterfall([
-  test,
-  test2
+  GetSecret,
+  GetOauth
   // myLastFunction,
 ], function (err, result) {
   listData(result);
