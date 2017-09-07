@@ -2,6 +2,7 @@ var fs = require('fs');
 var readline = require('readline');
 var google = require('googleapis');
 var googleAuth = require('google-auth-library');
+var async = require('async');
 
 // If modifying these scopes, delete your previously saved credentials
 // at ~/.credentials/sheets.googleapis.com-nodejs-quickstart.json
@@ -11,14 +12,42 @@ var TOKEN_DIR = (process.env.HOME || process.env.HOMEPATH ||
 var TOKEN_PATH = TOKEN_DIR + 'sheets.googleapis.com-nodejs-quickstart.json';
 
 var usr = "test";
-// Load client secrets from a local file.
-fs.readFile('client_secret.json', function processClientSecrets(err, content) {
-  if (err) {
-    console.log('Error loading client secret file: ' + err);
-    return;
-  }
 
-  authorize(JSON.parse(content), listData);
+function test(callback) {
+  fs.readFile('client_secret.json', function processClientSecrets(err, content) {
+    if (err) {
+      console.log('Error loading client secret file: ' + err);
+      return;
+    }
+    let kq = JSON.parse(content);
+    callback(null, kq);
+    //authorize(JSON.parse(content),listData);
+  });
+}
+
+function test2(kq, callback){
+  var clientSecret = kq.installed.client_secret;
+  var clientId = kq.installed.client_id;
+  var redirectUrl = kq.installed.redirect_uris[0];
+  var auth = new googleAuth();
+  var oauth2Client = new auth.OAuth2(clientId, clientSecret, redirectUrl);
+
+  fs.readFile(TOKEN_PATH, function (err, token) {
+    if (err) {
+      getNewToken(oauth2Client, callback);
+    } else {
+      oauth2Client.credentials = JSON.parse(token);
+      return oauth2Client;
+    }
+  });
+}
+
+async.waterfall([
+  test,
+  test2
+  // myLastFunction,
+], function (err, result) {
+  listData(result);
 });
 
 function authorize(credentials, callback) {
@@ -93,9 +122,10 @@ function listData(auth) {
     if (rows.length == 0) {
       console.log('Không có dữ liệu');
     } else {
-      console.log(response.values);
-      fs.writeFile('./fileJson/' + usr + '.json', '');
-      fs.writeFile('./fileJson/' + usr + '.json', JSON.stringify(rows));
+      //console.log(response.values);
+      console.log("Ok");
+      //fs.writeFile('./fileJson/' + usr + '.json', '');
+      //fs.writeFile('./fileJson/' + usr + '.json', JSON.stringify(rows));
       //var id = "ma_1";
       // for (var i = 0; i < rows.length; i++) {
       //   var r = rows[i];
