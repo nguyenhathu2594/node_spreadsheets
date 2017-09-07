@@ -25,7 +25,7 @@ function test(callback) {
   });
 }
 
-function test2(kq, callback){
+function test2(kq, callback) {
   var clientSecret = kq.installed.client_secret;
   var clientId = kq.installed.client_id;
   var redirectUrl = kq.installed.redirect_uris[0];
@@ -37,7 +37,7 @@ function test2(kq, callback){
       getNewToken(oauth2Client, callback);
     } else {
       oauth2Client.credentials = JSON.parse(token);
-      return oauth2Client;
+      callback(null, oauth2Client);
     }
   });
 }
@@ -122,8 +122,8 @@ function listData(auth) {
     if (rows.length == 0) {
       console.log('Không có dữ liệu');
     } else {
-      //console.log(response.values);
-      console.log("Ok");
+      console.log(response.values);
+      //console.log("Ok");
       //fs.writeFile('./fileJson/' + usr + '.json', '');
       //fs.writeFile('./fileJson/' + usr + '.json', JSON.stringify(rows));
       //var id = "ma_1";
