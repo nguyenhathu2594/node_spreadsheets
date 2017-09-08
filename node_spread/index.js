@@ -20,11 +20,11 @@ app.use(logger("dev")); //Log
 app.get('/', (req, res) => {
   res.send("Server chạy Ok");
 });
-
+var server = http.createServer(app);
 //Khởi động server
-app.listen(port, function () {
-  console.log("Ứng dụng đang chạy trên cổng: " + port);
-})
+// app.listen(port, function () {
+//   console.log("Ứng dụng đang chạy trên cổng: " + port);
+// })
 
 var SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly'];
 var TOKEN_DIR = (process.env.HOME || process.env.HOMEPATH ||
@@ -159,4 +159,11 @@ app.get('/getsl/:id', function (req, res) {
       res.json(listData(result, req.params.id));
     });
   }
-})
+});
+
+app.set('port', process.env.OPENSHIFT_NODEJS_PORT || process.env.PORT || 3002);
+app.set('ip', process.env.OPENSHIFT_NODEJS_IP || process.env.IP || "127.0.0.1");
+
+server.listen(app.get('port'), app.get('ip'), function() {
+  console.log("Chat bot server listening at %s:%d ", app.get('ip'), app.get('port'));
+});
