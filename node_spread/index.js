@@ -3,15 +3,33 @@ var readline = require('readline');
 var google = require('googleapis');
 var googleAuth = require('google-auth-library');
 var async = require('async');
+var logger = require('morgan');
+var http = require('http');
+var bodyParser = require('body-parser');
+var express = require('express');
+var router = express();
 
-// If modifying these scopes, delete your previously saved credentials
-// at ~/.credentials/sheets.googleapis.com-nodejs-quickstart.json
+//Khởi tạo
+var app = express();
+var port = process.env.PORT || 3000; //Cấu hình theo biến môi trường(Nếu port k có sẽ gán mặc định cổng 3000)
+app.use(bodyParser.json()); //Dữ liệu muốn đọc từ người dùng là Json
+app.use(bodyParser.urlencoded({
+  extended: true
+})); //Chấp nhận các kiểu dữ liệu post về server
+app.use(logger("dev")); //Log
+app.get('/', (req, res) => {
+  res.send("Server chạy Ok");
+});
+
+//Khởi động server
+app.listen(port, function () {
+  console.log("Ứng dụng đang chạy trên cổng: " + port);
+})
+
 var SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly'];
 var TOKEN_DIR = (process.env.HOME || process.env.HOMEPATH ||
   process.env.USERPROFILE) + '/.credentials/';
 var TOKEN_PATH = TOKEN_DIR + 'sheets.googleapis.com-nodejs-quickstart.json';
-
-var usr = "test";
 
 function GetSecret(callback) {
   fs.readFile('client_secret.json', function processClientSecrets(err, content) {
@@ -41,14 +59,8 @@ function GetOauth(kq, callback) {
     }
   });
 }
+//Trả về đối tượng sau khi đã lấy được xác thực(Chạy đồng bộ không bất đồng bộ nếu không sẽ không trả về key xác thực)
 
-async.waterfall([
-  GetSecret,
-  GetOauth
-  // myLastFunction,
-], function (err, result) {
-  listData(result);
-});
 
 function authorize(credentials, callback) {
   var clientSecret = credentials.installed.client_secret;
@@ -107,7 +119,7 @@ function thongBao(tb) {
   return console.log(tb);
 }
 
-function listData(auth) {
+function listData(auth, id) {
   var sheets = google.sheets('v4');
   sheets.spreadsheets.values.get({
     auth: auth,
@@ -122,21 +134,29 @@ function listData(auth) {
     if (rows.length == 0) {
       console.log('Không có dữ liệu');
     } else {
-      console.log(response.values);
-      //console.log("Ok");
-      //fs.writeFile('./fileJson/' + usr + '.json', '');
-      //fs.writeFile('./fileJson/' + usr + '.json', JSON.stringify(rows));
-      //var id = "ma_1";
-      // for (var i = 0; i < rows.length; i++) {
-      //   var r = rows[i];
-      //   if (r[0] == id.toUpperCase().trim()) {
-      //     if (r[2] > 1) {
-      //       thongBao("Hàng còn");
-      //     } else {
-      //       thongBao("Hết hàng");
-      //     }
-      //   }
-      // }
+      for (var i = 0; i < rows.length; i++) {
+        var r = rows[i];
+        if (r[0].toUpperCase().trim() == id.toUpperCase().trim()) {
+          if (r[2] > 1) {
+            return thongBao("Hàng còn");
+          } else {
+            return thongBao("Hết hàng");
+          }
+        } else {
+          return thongBao(`Không tồn tại mặt hàng có mã là: ${id.toUpperCase().trim()}`);
+        }
+      }
     }
   });
 }
+
+app.get('/getsl/:id', function (req, res) {
+  if (req.params.id != null) {
+    async.waterfall([
+      GetSecret,
+      GetOauth
+    ], function (err, result) {
+      res.json(listData(result, req.params.id));
+    });
+  }
+})
