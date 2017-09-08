@@ -138,12 +138,13 @@ function listData(auth, id) {
         var r = rows[i];
         if (r[0].toUpperCase().trim() == id.toUpperCase().trim()) {
           if (r[2] > 1) {
-            return thongBao("Hàng còn");
+            var a = "Hang con";
+            return a;
           } else {
-            return thongBao("Hết hàng");
+            console.log("Hết hàng");
           }
         } else {
-          return thongBao(`Không tồn tại mặt hàng có mã là: ${id.toUpperCase().trim()}`);
+          console.log(`Không tồn tại mặt hàng có mã là: ${id.toUpperCase().trim()}`);
         }
       }
     }
@@ -156,7 +157,11 @@ app.get('/getsl/:id', function (req, res) {
       GetSecret,
       GetOauth
     ], function (err, result) {
-      res.json(listData(result, req.params.id));
+      var a = listData(result, req.params.id) ;
+      var jsonText = [];
+      jsonText.push({ "text": a});
+      res.send(jsonText);
+      //res.json(listData(result, req.params.id));
     });
   }
 });
