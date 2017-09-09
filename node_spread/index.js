@@ -21,10 +21,6 @@ app.get('/', (req, res) => {
   res.send("Server chạy Ok");
 });
 var server = http.createServer(app);
-//Khởi động server
-// app.listen(port, function () {
-//   console.log("Ứng dụng đang chạy trên cổng: " + port);
-// })
 
 var SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly'];
 var TOKEN_DIR = (process.env.HOME || process.env.HOMEPATH ||
@@ -119,7 +115,7 @@ function thongBao(tb) {
   return console.log(tb);
 }
 
-function listData(auth, id) {
+function listData(auth, callback) {
   var sheets = google.sheets('v4');
   sheets.spreadsheets.values.get({
     auth: auth,
@@ -132,43 +128,77 @@ function listData(auth, id) {
     }
     var rows = response.values;
     if (rows.length == 0) {
-      console.log('Không có dữ liệu');
+      callback(null, JSON.stringify('Không có dữ liệu'));
+      //console.log('Không có dữ liệu');
     } else {
-      for (var i = 0; i < rows.length; i++) {
-        var r = rows[i];
-        if (r[0].toUpperCase().trim() == id.toUpperCase().trim()) {
-          if (r[2] > 1) {
-            var a = "Hang con";
-            return a;
-          } else {
-            console.log("Hết hàng");
-          }
-        } else {
-          console.log(`Không tồn tại mặt hàng có mã là: ${id.toUpperCase().trim()}`);
-        }
-      }
+      callback(null, JSON.stringify(rows));
+      // for (var i = 0; i < rows.length; i++) {
+      //   var r = rows[i];
+      //   if (r[0].toUpperCase().trim() == id.toUpperCase().trim()) {
+      //     if (r[2] > 1) {
+      //       tb = "Hàng còn";
+      //       return tb;
+      //     } else {
+      //       tb = "Hết hàng";
+      //       return tb;
+      //     }
+      //   } else {
+      //     tb = `Không tồn tại mặt hàng có mã là: ${id.toUpperCase().trim()}`;
+      //     return tb;
+      //   }
+      // }
     }
   });
 }
 
 app.get('/getsl/:id', function (req, res) {
+  var kq;
   if (req.params.id != null) {
-    async.waterfall([
+    kq = async.waterfall([
       GetSecret,
-      GetOauth
+      GetOauth,
+      listData
     ], function (err, result) {
-      var a = listData(result, req.params.id) ;
+      kq = result;
+      var values = JSON.parse(kq);
       var jsonText = [];
-      jsonText.push({ "text": a});
-      res.send(jsonText);
-      //res.json(listData(result, req.params.id));
+      if (values == 'Không có dữ liệu') {
+        jsonText.push({
+          "text": 'Hiện tại hệ thống đang gặp một chút trục trặc, vui lòng kiểm tra lại sau. Thành thật xin lỗi quý khách'
+        });
+        return res.send(jsonText);
+      } else {
+        var idS = req.params.id;
+        for (var i = 0; i < values.length; i++) {
+          var obj = values[i];
+          if (obj[0].toUpperCase().trim() == idS.toUpperCase().trim()) {
+            if (obj[2] > 1) {
+              jsonText.push({
+                "text": 'Hàng còn'
+              });
+              return res.send(jsonText);
+            } else {
+              jsonText.push({
+                "text": 'Hết hàng'
+              });
+              return res.send(jsonText);
+            }
+          } else {
+            jsonText.push({
+              "text": `Không tồn tại mặt hàng có mã là: ${idS.toUpperCase().trim()}`
+            });
+            return res.send(jsonText);
+          }
+        }
+      }
     });
+    
   }
 });
 
 app.set('port', process.env.OPENSHIFT_NODEJS_PORT || process.env.PORT || 3002);
 app.set('ip', process.env.OPENSHIFT_NODEJS_IP || process.env.IP || "127.0.0.1");
 
-server.listen(app.get('port'), app.get('ip'), function() {
+server.listen(app.get('port'), app.get('ip'), function () {
   console.log("Chat bot server listening at %s:%d ", app.get('ip'), app.get('port'));
 });
